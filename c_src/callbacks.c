@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <libcouchbase/couchbase.h>
+#include <libcouchbase/n1ql.h>
 #include "erl_nif.h"
 #include "callbacks.h"
 
@@ -111,5 +112,35 @@ void http_callback(lcb_http_request_t request,
         cbh->ret.data = malloc(resp->v.v0.nbytes);
         cbh->ret.size = resp->v.v0.nbytes;
         memcpy(cbh->ret.data, resp->v.v0.bytes, resp->v.v0.nbytes);
+    }
+}
+
+void n1ql_callback(lcb_t instance,
+                   int cbtype,
+                   const lcb_RESPN1QL *resp)
+{
+    struct libcouchbase_callback_n1ql *cb;
+    struct libcouchbase_callback* node;
+    cb = (struct libcouchbase_callback_n1ql *) ((lcb_RESPBASE *)resp)->cookie;
+
+    node = calloc(1, sizeof(struct libcouchbase_callback));
+    node->data = calloc(resp->nrow+1,sizeof(char));
+    node->size = resp->nrow;
+    memcpy(node->data, resp->row, resp->nrow);
+    node->next = NULL;
+    node->prev = NULL;
+
+    if (! (resp->rflags & LCB_RESP_F_FINAL)) {
+        if(cb->size ==0) {
+            cb->ret_head = node;
+            cb->ret_curr = node;
+        } else {
+            node->prev = cb->ret_curr;
+            cb->ret_curr->next = node;
+            cb->ret_curr = node;
+        }
+        cb->size += 1;
+    } else {
+        cb->meta = node;
     }
 }

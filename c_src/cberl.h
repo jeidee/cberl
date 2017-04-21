@@ -2,6 +2,7 @@
 #define CBERL_H
 
 #include <libcouchbase/couchbase.h>
+#include <libcouchbase/n1ql.h>
 #include "queue.h"
 #include "erl_nif.h"
 
@@ -16,8 +17,8 @@ typedef struct handle {
     ErlNifTid thread;
     ErlNifThreadOpts* thread_opts;
     queue_t *queue;
-    ERL_NIF_TERM (*calltable[9])(ErlNifEnv* env, struct handle* handle, void* obj);
-    void* (*args_calltable[9])(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
+    ERL_NIF_TERM (*calltable[10])(ErlNifEnv* env, struct handle* handle, void* obj);
+    void* (*args_calltable[10])(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
     lcb_t instance;
 } handle_t;
 
